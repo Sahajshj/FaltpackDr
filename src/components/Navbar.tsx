@@ -12,6 +12,7 @@ interface NavbarProps {
   currentPage: Page;
   setCurrentPage: (page: Page) => void;
   onQuoteClick: () => void;
+  selectedServiceId: string | null;
   setSelectedServiceId: (id: string | null) => void;
 }
 
@@ -19,12 +20,14 @@ export default function Navbar({
   currentPage, 
   setCurrentPage, 
   onQuoteClick,
+  selectedServiceId,
   setSelectedServiceId
 }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isServicesMenuOpen, setIsServicesMenuOpen] = useState(false);
   const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
+  const [activeHomeSection, setActiveHomeSection] = useState(() => decodeURIComponent(window.location.hash.slice(1)));
   
   // Mobile accordion states
   const [isMobileHomeExpanded, setIsMobileHomeExpanded] = useState(false);
@@ -44,12 +47,19 @@ export default function Navbar({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Reset accordion states when drawer closes
   useEffect(() => {
-    if (!isMobileMenuOpen) {
-      setIsMobileHomeExpanded(false);
-      setIsMobileGeneralExpanded(false);
-      setIsMobileAdditionalExpanded(false);
+    const syncHomeSection = () => {
+      setActiveHomeSection(decodeURIComponent(window.location.hash.slice(1)));
+    };
+    window.addEventListener('popstate', syncHomeSection);
+    return () => window.removeEventListener('popstate', syncHomeSection);
+  }, []);
+
+  // Refresh the active Home subsection when opening the drawer. Accordion
+  // expansion is intentionally preserved between openings.
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      setActiveHomeSection(decodeURIComponent(window.location.hash.slice(1)));
     }
   }, [isMobileMenuOpen]);
 
@@ -141,23 +151,33 @@ export default function Navbar({
 
   const toggleHomeMenu = () => {
     setIsServicesMenuOpen(false);
+    if (!isHomeMenuOpen) {
+      setActiveHomeSection(decodeURIComponent(window.location.hash.slice(1)));
+    }
     setIsHomeMenuOpen(!isHomeMenuOpen);
   };
 
   const handleNavClick = (page: Page) => {
+    if (page === 'home') setActiveHomeSection('');
     setCurrentPage(page);
     setIsMobileMenuOpen(false);
     setIsServicesMenuOpen(false);
     setIsHomeMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // On mobile, wait for the drawer's body-scroll lock to be removed.
+    window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
   };
 
   const handleHomeSectionClick = (sectionId: string) => {
+    setActiveHomeSection(sectionId);
     setIsMobileMenuOpen(false);
     setIsServicesMenuOpen(false);
     setIsHomeMenuOpen(false);
+    const sectionUrl = `/#${encodeURIComponent(sectionId)}`;
+
     if (currentPage !== 'home') {
       setCurrentPage('home');
+      // setCurrentPage creates the history entry; retain it and attach the section hash.
+      window.history.replaceState({}, '', sectionUrl);
       setTimeout(() => {
         const element = document.getElementById(sectionId);
         if (element) {
@@ -165,21 +185,50 @@ export default function Navbar({
         }
       }, 150);
     } else {
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+      const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (currentUrl !== sectionUrl) {
+        window.history.pushState({}, '', sectionUrl);
       }
+      window.setTimeout(() => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+      }, 50);
     }
   };
 
+  const isHomeSectionActive = (sectionId: string) =>
+    currentPage === 'home' && activeHomeSection === sectionId;
+
+  const mobileHomeSectionClass = (sectionId: string) =>
+    `w-full text-left py-2.5 px-3 rounded-lg font-semibold text-xs flex items-center justify-between transition-colors ${
+      isHomeSectionActive(sectionId)
+        ? 'bg-emerald-50 text-emerald-950'
+        : 'text-stone-750 hover:bg-stone-50 hover:text-emerald-800'
+    }`;
+
   const handleServiceItemSelect = (id: string, isAdditional: boolean = false) => {
+    const targetPage: Page = isAdditional ? 'additional-services' : 'services';
+    const isSameCategory = currentPage === targetPage;
+
     setSelectedServiceId(id);
-    setCurrentPage(isAdditional ? 'additional-services' : 'services');
+    setCurrentPage(targetPage);
     setIsServicesMenuOpen(false);
     setIsHomeMenuOpen(false);
     setIsMobileMenuOpen(false);
-    // Instantly reset scroll to top to prevent collision with smooth scrolling in the target view
-    window.scrollTo(0, 0);
+
+    // Same-category selections replace/highlight the card in place.
+    if (isSameCategory) return;
+
+    // Between catalogs, preserve the deliberate top-then-service transition.
+    window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+    window.setTimeout(() => {
+      const isMobile = window.matchMedia('(max-width: 767px)').matches;
+      const catalog = isAdditional ? 'additional' : 'general';
+      const prefix = isMobile ? `mobile-${catalog}-service-` : `${catalog}-service-`;
+      document.getElementById(`${prefix}${id}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: isMobile ? 'start' : 'center',
+      });
+    }, 350);
   };
 
   return (
@@ -352,17 +401,15 @@ export default function Navbar({
                 
                 {/* 1. Search */}
                 <button
-                  onClick={() => {
-                    setIsHomeMenuOpen(false);
-                    handleNavClick('home');
-                  }}
-                  className="flex items-start gap-3 p-2 -mx-2 rounded-lg text-left hover:bg-emerald-50/40 group/item transition-colors"
+                  onClick={() => handleNavClick('home')}
+                  aria-current={isHomeSectionActive('') ? 'page' : undefined}
+                  className={`flex items-start gap-3 p-2 -mx-2 rounded-lg text-left group/item transition-colors ${isHomeSectionActive('') ? 'bg-emerald-50 ring-1 ring-emerald-100' : 'hover:bg-emerald-50/40'}`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white transition-colors shrink-0">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${isHomeSectionActive('') ? 'bg-emerald-800 text-white' : 'bg-stone-100 text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white'}`}>
                     <Search className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-stone-800 group-hover/item:text-emerald-800 transition-colors">
+                    <h4 className={`text-xs font-bold transition-colors ${isHomeSectionActive('') ? 'text-emerald-900' : 'text-stone-800 group-hover/item:text-emerald-800'}`}>
                       Search Flatpacks
                     </h4>
                     <p className="text-[10px] text-stone-400 leading-normal mt-0.5">
@@ -373,14 +420,15 @@ export default function Navbar({
 
                 {/* 2. Popular Builds */}
                 <button
-                  onClick={() => handleHomeSectionClick('popular-projects-section')}
-                  className="flex items-start gap-3 p-2 -mx-2 rounded-lg text-left hover:bg-emerald-50/40 group/item transition-colors"
+                  onClick={() => handleHomeSectionClick('popular-builds')}
+                  aria-current={isHomeSectionActive('popular-builds') ? 'location' : undefined}
+                  className={`flex items-start gap-3 p-2 -mx-2 rounded-lg text-left group/item transition-colors ${isHomeSectionActive('popular-builds') ? 'bg-emerald-50 ring-1 ring-emerald-100' : 'hover:bg-emerald-50/40'}`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white transition-colors shrink-0">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${isHomeSectionActive('popular-builds') ? 'bg-emerald-800 text-white' : 'bg-stone-100 text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white'}`}>
                     <Bed className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-stone-800 group-hover/item:text-emerald-800 transition-colors">
+                    <h4 className={`text-xs font-bold transition-colors ${isHomeSectionActive('popular-builds') ? 'text-emerald-900' : 'text-stone-800 group-hover/item:text-emerald-800'}`}>
                       Popular Builds
                     </h4>
                     <p className="text-[10px] text-stone-400 leading-normal mt-0.5">
@@ -391,14 +439,15 @@ export default function Navbar({
 
                 {/* 3. Our Quality Standards */}
                 <button
-                  onClick={() => handleHomeSectionClick('scrollytelling-section')}
-                  className="flex items-start gap-3 p-2 -mx-2 rounded-lg text-left hover:bg-emerald-50/40 group/item transition-colors"
+                  onClick={() => handleHomeSectionClick('quality-standards')}
+                  aria-current={isHomeSectionActive('quality-standards') ? 'location' : undefined}
+                  className={`flex items-start gap-3 p-2 -mx-2 rounded-lg text-left group/item transition-colors ${isHomeSectionActive('quality-standards') ? 'bg-emerald-50 ring-1 ring-emerald-100' : 'hover:bg-emerald-50/40'}`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white transition-colors shrink-0">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${isHomeSectionActive('quality-standards') ? 'bg-emerald-800 text-white' : 'bg-stone-100 text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white'}`}>
                     <ShieldCheck className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-stone-800 group-hover/item:text-emerald-800 transition-colors">
+                    <h4 className={`text-xs font-bold transition-colors ${isHomeSectionActive('quality-standards') ? 'text-emerald-900' : 'text-stone-800 group-hover/item:text-emerald-800'}`}>
                       Our Quality Standards
                     </h4>
                     <p className="text-[10px] text-stone-400 leading-normal mt-0.5">
@@ -409,14 +458,15 @@ export default function Navbar({
 
                 {/* 4. Five Step Process */}
                 <button
-                  onClick={() => handleHomeSectionClick('how-it-works-section')}
-                  className="flex items-start gap-3 p-2 -mx-2 rounded-lg text-left hover:bg-emerald-50/40 group/item transition-colors"
+                  onClick={() => handleHomeSectionClick('five-step-process')}
+                  aria-current={isHomeSectionActive('five-step-process') ? 'location' : undefined}
+                  className={`flex items-start gap-3 p-2 -mx-2 rounded-lg text-left group/item transition-colors ${isHomeSectionActive('five-step-process') ? 'bg-emerald-50 ring-1 ring-emerald-100' : 'hover:bg-emerald-50/40'}`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white transition-colors shrink-0">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${isHomeSectionActive('five-step-process') ? 'bg-emerald-800 text-white' : 'bg-stone-100 text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white'}`}>
                     <Shuffle className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-stone-800 group-hover/item:text-emerald-800 transition-colors">
+                    <h4 className={`text-xs font-bold transition-colors ${isHomeSectionActive('five-step-process') ? 'text-emerald-900' : 'text-stone-800 group-hover/item:text-emerald-800'}`}>
                       Five Step Process
                     </h4>
                     <p className="text-[10px] text-stone-400 leading-normal mt-0.5">
@@ -427,14 +477,15 @@ export default function Navbar({
 
                 {/* 5. Assembly Support */}
                 <button
-                  onClick={() => handleHomeSectionClick('after-sales-section')}
-                  className="flex items-start gap-3 p-2 -mx-2 rounded-lg text-left hover:bg-emerald-50/40 group/item transition-colors"
+                  onClick={() => handleHomeSectionClick('integrated-support')}
+                  aria-current={isHomeSectionActive('integrated-support') ? 'location' : undefined}
+                  className={`flex items-start gap-3 p-2 -mx-2 rounded-lg text-left group/item transition-colors ${isHomeSectionActive('integrated-support') ? 'bg-emerald-50 ring-1 ring-emerald-100' : 'hover:bg-emerald-50/40'}`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white transition-colors shrink-0">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${isHomeSectionActive('integrated-support') ? 'bg-emerald-800 text-white' : 'bg-stone-100 text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white'}`}>
                     <Wrench className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-stone-800 group-hover/item:text-emerald-800 transition-colors">
+                    <h4 className={`text-xs font-bold transition-colors ${isHomeSectionActive('integrated-support') ? 'text-emerald-900' : 'text-stone-800 group-hover/item:text-emerald-800'}`}>
                       Integrated Support
                     </h4>
                     <p className="text-[10px] text-stone-400 leading-normal mt-0.5">
@@ -445,14 +496,15 @@ export default function Navbar({
 
                 {/* 6. Reviews & Feedback */}
                 <button
-                  onClick={() => handleHomeSectionClick('reviews-section')}
-                  className="flex items-start gap-3 p-2 -mx-2 rounded-lg text-left hover:bg-emerald-50/40 group/item transition-colors"
+                  onClick={() => handleHomeSectionClick('reviews')}
+                  aria-current={isHomeSectionActive('reviews') ? 'location' : undefined}
+                  className={`flex items-start gap-3 p-2 -mx-2 rounded-lg text-left group/item transition-colors ${isHomeSectionActive('reviews') ? 'bg-emerald-50 ring-1 ring-emerald-100' : 'hover:bg-emerald-50/40'}`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white transition-colors shrink-0">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 ${isHomeSectionActive('reviews') ? 'bg-emerald-800 text-white' : 'bg-stone-100 text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white'}`}>
                     <CheckCircle2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-stone-800 group-hover/item:text-emerald-800 transition-colors">
+                    <h4 className={`text-xs font-bold transition-colors ${isHomeSectionActive('reviews') ? 'text-emerald-900' : 'text-stone-800 group-hover/item:text-emerald-800'}`}>
                       Reviews & Feedback
                     </h4>
                     <p className="text-[10px] text-stone-400 leading-normal mt-0.5">
@@ -483,33 +535,43 @@ export default function Navbar({
               </h3>
               
               <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
-                {SERVICES_DATA.map((service) => (
-                  <button
-                    key={service.id}
-                    onClick={() => handleServiceItemSelect(service.id, false)}
-                    className="flex items-start gap-3 p-2 -mx-2 rounded-lg text-left hover:bg-emerald-50/40 group/item transition-colors"
-                  >
-                    <div className="w-7 h-7 rounded-md bg-stone-100 flex items-center justify-center text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white transition-colors shrink-0">
-                      {getServiceIcon(service.iconName, 'w-4 h-4')}
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-bold text-stone-800 group-hover/item:text-emerald-800 transition-colors">
-                        {service.title}
-                      </h4>
-                      <p className="text-[10px] text-stone-400 line-clamp-1 mt-0.5">
-                        {service.description}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+                {SERVICES_DATA.map((service) => {
+                  const isActive = currentPage === 'services' && selectedServiceId === service.id;
+                  return (
+                    <button
+                      key={service.id}
+                      onClick={() => handleServiceItemSelect(service.id, false)}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`flex items-start gap-3 p-2 -mx-2 rounded-lg text-left group/item transition-colors ${
+                        isActive ? 'bg-emerald-50 ring-1 ring-emerald-100' : 'hover:bg-emerald-50/40'
+                      }`}
+                    >
+                      <div className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors shrink-0 ${
+                        isActive
+                          ? 'bg-emerald-800 text-white'
+                          : 'bg-stone-100 text-stone-600 group-hover/item:bg-emerald-800 group-hover/item:text-white'
+                      }`}>
+                        {getServiceIcon(service.iconName, 'w-4 h-4')}
+                      </div>
+                      <div>
+                        <h4 className={`text-xs font-bold transition-colors ${
+                          isActive ? 'text-emerald-900' : 'text-stone-800 group-hover/item:text-emerald-800'
+                        }`}>
+                          {service.title}
+                        </h4>
+                        <p className="text-[10px] text-stone-400 line-clamp-1 mt-0.5">
+                          {service.description}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
               <div className="mt-4 border-t border-stone-100 pt-3">
                 <button
                   onClick={() => {
                     setSelectedServiceId(null);
-                    setCurrentPage('services');
-                    setIsServicesMenuOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    handleNavClick('services');
                   }}
                   className="text-left text-xs font-extrabold text-emerald-800 hover:text-emerald-950 inline-flex items-center gap-1.5 transition-colors"
                 >
@@ -531,28 +593,43 @@ export default function Navbar({
               </div>
 
               <div className="grid grid-cols-1 gap-y-1">
-                {ADDITIONAL_SERVICES_DATA.slice(0, 7).map((service) => (
-                  <button
-                    key={service.id}
-                    onClick={() => handleServiceItemSelect(service.id, true)}
-                    className="flex items-start gap-3 p-1.5 -mx-1.5 rounded-lg text-left hover:bg-emerald-50/40 group/item transition-colors"
-                  >
-                    <div className="w-6.5 h-6.5 rounded-md bg-stone-100 flex items-center justify-center text-stone-500 group-hover/item:bg-emerald-800 group-hover/item:text-white transition-colors shrink-0">
-                      {getServiceIcon(service.iconName, 'w-3.5 h-3.5')}
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-semibold text-stone-800 group-hover/item:text-emerald-800 transition-colors">
-                        {service.title}
-                      </h4>
-                      <p className="text-[10px] text-stone-400 line-clamp-1">
-                        {service.description}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+                {ADDITIONAL_SERVICES_DATA.slice(0, 7).map((service) => {
+                  const isActive = currentPage === 'additional-services' && selectedServiceId === service.id;
+                  return (
+                    <button
+                      key={service.id}
+                      onClick={() => handleServiceItemSelect(service.id, true)}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`flex items-start gap-3 p-1.5 -mx-1.5 rounded-lg text-left group/item transition-colors ${
+                        isActive ? 'bg-emerald-50 ring-1 ring-emerald-100' : 'hover:bg-emerald-50/40'
+                      }`}
+                    >
+                      <div className={`w-6.5 h-6.5 rounded-md flex items-center justify-center transition-colors shrink-0 ${
+                        isActive
+                          ? 'bg-emerald-800 text-white'
+                          : 'bg-stone-100 text-stone-500 group-hover/item:bg-emerald-800 group-hover/item:text-white'
+                      }`}>
+                        {getServiceIcon(service.iconName, 'w-3.5 h-3.5')}
+                      </div>
+                      <div>
+                        <h4 className={`text-xs font-semibold transition-colors ${
+                          isActive ? 'text-emerald-900' : 'text-stone-800 group-hover/item:text-emerald-800'
+                        }`}>
+                          {service.title}
+                        </h4>
+                        <p className="text-[10px] text-stone-400 line-clamp-1">
+                          {service.description}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
                 
                 <button
-                  onClick={() => handleNavClick('additional-services')}
+                  onClick={() => {
+                    setSelectedServiceId(null);
+                    handleNavClick('additional-services');
+                  }}
                   className="mt-2 text-left p-1.5 -mx-1.5 text-xs font-bold text-emerald-800 hover:text-emerald-950 inline-flex items-center gap-1.5 transition-colors"
                 >
                   View all preparation services
@@ -629,7 +706,9 @@ export default function Navbar({
                 <button
                   onClick={() => setIsMobileHomeExpanded(!isMobileHomeExpanded)}
                   className={`w-full text-sm font-bold py-3.5 px-4 rounded-xl text-left transition-all flex items-center justify-between ${
-                    isMobileHomeExpanded 
+                    currentPage === 'home'
+                      ? 'bg-emerald-50 text-emerald-950'
+                      : isMobileHomeExpanded
                       ? 'bg-stone-50/80 text-stone-900' 
                       : 'text-stone-700 hover:text-stone-900 hover:bg-stone-50'
                   }`}
@@ -641,49 +720,73 @@ export default function Navbar({
                   <div className="pl-4 pr-1 py-1 space-y-0.5 bg-stone-50/50 rounded-xl border border-stone-200/40 mt-1 mb-2 animate-in fade-in slide-in-from-top-1 duration-200">
                     <button
                       onClick={() => handleNavClick('home')}
-                      className="w-full text-left py-2.5 px-3 rounded-lg text-stone-750 hover:bg-stone-50 hover:text-emerald-800 font-semibold text-xs flex items-center justify-between transition-colors"
+                      aria-current={isHomeSectionActive('') ? 'page' : undefined}
+                      className={mobileHomeSectionClass('')}
                     >
-                      <span className="truncate">Search</span>
+                      <span className="truncate flex items-center gap-2">
+                        {isHomeSectionActive('') && <span className="w-1.5 h-1.5 rounded-full bg-emerald-800 shrink-0" />}
+                        Search
+                      </span>
                       <ChevronRight className="w-3 h-3 text-stone-300" />
                     </button>
 
                     <button
-                      onClick={() => handleHomeSectionClick('popular-projects-section')}
-                      className="w-full text-left py-2.5 px-3 rounded-lg text-stone-750 hover:bg-stone-50 hover:text-emerald-800 font-semibold text-xs flex items-center justify-between transition-colors"
+                      onClick={() => handleHomeSectionClick('popular-builds')}
+                      aria-current={isHomeSectionActive('popular-builds') ? 'location' : undefined}
+                      className={mobileHomeSectionClass('popular-builds')}
                     >
-                      <span className="truncate">Popular Builds</span>
+                      <span className="truncate flex items-center gap-2">
+                        {isHomeSectionActive('popular-builds') && <span className="w-1.5 h-1.5 rounded-full bg-emerald-800 shrink-0" />}
+                        Popular Builds
+                      </span>
                       <ChevronRight className="w-3 h-3 text-stone-300" />
                     </button>
 
                     <button
-                      onClick={() => handleHomeSectionClick('scrollytelling-section')}
-                      className="w-full text-left py-2.5 px-3 rounded-lg text-stone-750 hover:bg-stone-50 hover:text-emerald-800 font-semibold text-xs flex items-center justify-between transition-colors"
+                      onClick={() => handleHomeSectionClick('quality-standards')}
+                      aria-current={isHomeSectionActive('quality-standards') ? 'location' : undefined}
+                      className={mobileHomeSectionClass('quality-standards')}
                     >
-                      <span className="truncate">Our Standards</span>
+                      <span className="truncate flex items-center gap-2">
+                        {isHomeSectionActive('quality-standards') && <span className="w-1.5 h-1.5 rounded-full bg-emerald-800 shrink-0" />}
+                        Our Standards
+                      </span>
                       <ChevronRight className="w-3 h-3 text-stone-300" />
                     </button>
 
                     <button
-                      onClick={() => handleHomeSectionClick('how-it-works-section')}
-                      className="w-full text-left py-2.5 px-3 rounded-lg text-stone-750 hover:bg-stone-50 hover:text-emerald-800 font-semibold text-xs flex items-center justify-between transition-colors"
+                      onClick={() => handleHomeSectionClick('five-step-process')}
+                      aria-current={isHomeSectionActive('five-step-process') ? 'location' : undefined}
+                      className={mobileHomeSectionClass('five-step-process')}
                     >
-                      <span className="truncate">Five Step Process</span>
+                      <span className="truncate flex items-center gap-2">
+                        {isHomeSectionActive('five-step-process') && <span className="w-1.5 h-1.5 rounded-full bg-emerald-800 shrink-0" />}
+                        Five Step Process
+                      </span>
                       <ChevronRight className="w-3 h-3 text-stone-300" />
                     </button>
 
                     <button
-                      onClick={() => handleHomeSectionClick('after-sales-section')}
-                      className="w-full text-left py-2.5 px-3 rounded-lg text-stone-750 hover:bg-stone-50 hover:text-emerald-800 font-semibold text-xs flex items-center justify-between transition-colors"
+                      onClick={() => handleHomeSectionClick('integrated-support')}
+                      aria-current={isHomeSectionActive('integrated-support') ? 'location' : undefined}
+                      className={mobileHomeSectionClass('integrated-support')}
                     >
-                      <span className="truncate">Assembly Support</span>
+                      <span className="truncate flex items-center gap-2">
+                        {isHomeSectionActive('integrated-support') && <span className="w-1.5 h-1.5 rounded-full bg-emerald-800 shrink-0" />}
+                        Assembly Support
+                      </span>
                       <ChevronRight className="w-3 h-3 text-stone-300" />
                     </button>
 
                     <button
-                      onClick={() => handleHomeSectionClick('reviews-section')}
-                      className="w-full text-left py-2.5 px-3 rounded-lg text-stone-750 hover:bg-stone-50 hover:text-emerald-800 font-semibold text-xs flex items-center justify-between transition-colors"
+                      onClick={() => handleHomeSectionClick('reviews')}
+                      aria-current={isHomeSectionActive('reviews') ? 'location' : undefined}
+                      className={mobileHomeSectionClass('reviews')}
                     >
-                      <span className="truncate">Reviews</span>
+                      <span className="truncate flex items-center gap-2">
+                        {isHomeSectionActive('reviews') && <span className="w-1.5 h-1.5 rounded-full bg-emerald-800 shrink-0" />}
+                        Reviews
+                      </span>
                       <ChevronRight className="w-3 h-3 text-stone-300" />
                     </button>
                   </div>
@@ -695,7 +798,9 @@ export default function Navbar({
                 <button
                   onClick={() => setIsMobileGeneralExpanded(!isMobileGeneralExpanded)}
                   className={`w-full text-sm font-bold py-3.5 px-4 rounded-xl text-left transition-all flex items-center justify-between ${
-                    isMobileGeneralExpanded 
+                    currentPage === 'services'
+                      ? 'bg-emerald-50 text-emerald-950'
+                      : isMobileGeneralExpanded
                       ? 'bg-stone-50/80 text-stone-900' 
                       : 'text-stone-700 hover:text-stone-900 hover:bg-stone-50'
                   }`}
@@ -709,21 +814,38 @@ export default function Navbar({
                       onClick={() => {
                         setSelectedServiceId(null);
                         setCurrentPage('services');
+                        window.history.replaceState({}, '', '/services');
                         setIsMobileMenuOpen(false);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
                       }}
-                      className="w-full text-left py-2.5 px-3 rounded-lg text-emerald-800 hover:bg-emerald-50/50 font-bold text-xs flex items-center justify-between transition-colors"
+                      aria-current={currentPage === 'services' && !selectedServiceId ? 'page' : undefined}
+                      className={`w-full text-left py-2.5 px-3 rounded-lg font-bold text-xs flex items-center justify-between transition-colors ${
+                        currentPage === 'services' && !selectedServiceId
+                          ? 'bg-emerald-50 text-emerald-950'
+                          : 'text-emerald-800 hover:bg-emerald-50/50'
+                      }`}
                     >
-                      <span>View All General Services</span>
+                      <span className="flex items-center gap-2">
+                        {currentPage === 'services' && !selectedServiceId && <span className="w-1.5 h-1.5 rounded-full bg-emerald-800 shrink-0" />}
+                        View All General Services
+                      </span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     {SERVICES_DATA.map((service) => (
                       <button
                         key={service.id}
                         onClick={() => handleServiceItemSelect(service.id, false)}
-                        className="w-full text-left py-2.5 px-3 rounded-lg text-stone-750 hover:bg-stone-50 hover:text-emerald-800 font-semibold text-xs flex items-center justify-between transition-colors"
+                        aria-current={currentPage === 'services' && selectedServiceId === service.id ? 'page' : undefined}
+                        className={`w-full text-left py-2.5 px-3 rounded-lg font-semibold text-xs flex items-center justify-between transition-colors ${
+                          currentPage === 'services' && selectedServiceId === service.id
+                            ? 'bg-emerald-50 text-emerald-950'
+                            : 'text-stone-750 hover:bg-stone-50 hover:text-emerald-800'
+                        }`}
                       >
-                        <span className="truncate">{service.title}</span>
+                        <span className="truncate flex items-center gap-2">
+                          {currentPage === 'services' && selectedServiceId === service.id && <span className="w-1.5 h-1.5 rounded-full bg-emerald-800 shrink-0" />}
+                          {service.title}
+                        </span>
                         <ChevronRight className="w-3 h-3 text-stone-300" />
                       </button>
                     ))}
@@ -736,7 +858,9 @@ export default function Navbar({
                 <button
                   onClick={() => setIsMobileAdditionalExpanded(!isMobileAdditionalExpanded)}
                   className={`w-full text-sm font-bold py-3.5 px-4 rounded-xl text-left transition-all flex items-center justify-between ${
-                    isMobileAdditionalExpanded 
+                    currentPage === 'additional-services'
+                      ? 'bg-emerald-50 text-emerald-950'
+                      : isMobileAdditionalExpanded
                       ? 'bg-stone-50/80 text-stone-900' 
                       : 'text-stone-700 hover:text-stone-900 hover:bg-stone-50'
                   }`}
@@ -753,21 +877,38 @@ export default function Navbar({
                       onClick={() => {
                         setSelectedServiceId(null);
                         setCurrentPage('additional-services');
+                        window.history.replaceState({}, '', '/additional-services');
                         setIsMobileMenuOpen(false);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
                       }}
-                      className="w-full text-left py-2.5 px-3 rounded-lg text-emerald-800 hover:bg-emerald-50/50 font-bold text-xs flex items-center justify-between transition-colors"
+                      aria-current={currentPage === 'additional-services' && !selectedServiceId ? 'page' : undefined}
+                      className={`w-full text-left py-2.5 px-3 rounded-lg font-bold text-xs flex items-center justify-between transition-colors ${
+                        currentPage === 'additional-services' && !selectedServiceId
+                          ? 'bg-emerald-50 text-emerald-950'
+                          : 'text-emerald-800 hover:bg-emerald-50/50'
+                      }`}
                     >
-                      <span>All Prep & Additional Services</span>
+                      <span className="flex items-center gap-2">
+                        {currentPage === 'additional-services' && !selectedServiceId && <span className="w-1.5 h-1.5 rounded-full bg-emerald-800 shrink-0" />}
+                        All Prep & Additional Services
+                      </span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     {ADDITIONAL_SERVICES_DATA.map((service) => (
                       <button
                         key={service.id}
                         onClick={() => handleServiceItemSelect(service.id, true)}
-                        className="w-full text-left py-2.5 px-3 rounded-lg text-stone-750 hover:bg-stone-50 hover:text-emerald-800 font-semibold text-xs flex items-center justify-between transition-colors"
+                        aria-current={currentPage === 'additional-services' && selectedServiceId === service.id ? 'page' : undefined}
+                        className={`w-full text-left py-2.5 px-3 rounded-lg font-semibold text-xs flex items-center justify-between transition-colors ${
+                          currentPage === 'additional-services' && selectedServiceId === service.id
+                            ? 'bg-emerald-50 text-emerald-950'
+                            : 'text-stone-750 hover:bg-stone-50 hover:text-emerald-800'
+                        }`}
                       >
-                        <span className="truncate">{service.title}</span>
+                        <span className="truncate flex items-center gap-2">
+                          {currentPage === 'additional-services' && selectedServiceId === service.id && <span className="w-1.5 h-1.5 rounded-full bg-emerald-800 shrink-0" />}
+                          {service.title}
+                        </span>
                         <ChevronRight className="w-3 h-3 text-stone-300" />
                       </button>
                     ))}

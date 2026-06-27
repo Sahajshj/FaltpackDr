@@ -319,9 +319,9 @@ export default function Scrollytelling({ onQuoteClick }: ScrollytellingProps) {
 
   return (
     <section 
-      id="scrollytelling-section" 
+      id="quality-standards"
       ref={containerRef}
-      className="relative w-full bg-[#fcfbfa] text-stone-900 border-y border-stone-200/50"
+      className="relative w-full bg-[#fcfbfa] text-stone-900 border-y border-stone-200/50 scroll-mt-20"
       style={{ height: isPreloaded ? (isMobile ? '400vh' : '250vh') : 'auto' }}
     >
       {/* Absolute Loading overlay until critical frames are loaded */}

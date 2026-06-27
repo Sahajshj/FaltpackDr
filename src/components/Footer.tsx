@@ -67,9 +67,9 @@ export default function Footer({ setCurrentPage, onQuoteClick }: FooterProps) {
               <li>
                 <button 
                   onClick={() => {
-                    setCurrentPage('home');
+                    setCurrentPage('reviews');
                     setTimeout(() => {
-                      const el = document.getElementById('reviews-section');
+                      const el = document.getElementById('reviews');
                       if (el) {
                         el.scrollIntoView({ behavior: 'smooth' });
                       }

@@ -586,7 +586,7 @@ export default function HomeView({ setCurrentPage, onQuoteClick, setSelectedServ
       )}
 
       {/* SECTION 3 — POPULAR TRENDING PROJECTS */}
-      <section id="popular-projects-section" className="bg-stone-50 py-20 lg:py-24 border-b border-stone-200/40">
+      <section id="popular-builds" className="bg-stone-50 py-20 lg:py-24 border-b border-stone-200/40 scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <span className="text-[11px] font-mono uppercase tracking-widest font-bold text-emerald-800">Trending Projects</span>
@@ -663,7 +663,7 @@ export default function HomeView({ setCurrentPage, onQuoteClick, setSelectedServ
 
 
       {/* SECTION 7 — HOW IT WORKS */}
-      <section id="how-it-works-section" className="bg-white py-20 lg:py-24 border-b border-stone-100">
+      <section id="five-step-process" className="bg-white py-20 lg:py-24 border-b border-stone-100 scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-xl mx-auto mb-16">
             <span className="text-[11px] font-mono uppercase tracking-widest font-bold text-emerald-800">Stress-Free Booking</span>
@@ -830,7 +830,7 @@ export default function HomeView({ setCurrentPage, onQuoteClick, setSelectedServ
       </section>
 
       {/* SECTION 8 — ONE-YEAR AFTER-SALES SUPPORT */}
-      <section id="after-sales-section" className="bg-[#FAF8F5] py-20 lg:py-24 border-y border-stone-200/50">
+      <section id="integrated-support" className="bg-[#FAF8F5] py-20 lg:py-24 border-y border-stone-200/50 scroll-mt-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-800 mx-auto">
             <ShieldCheck className="w-6 h-6" />
@@ -867,7 +867,7 @@ export default function HomeView({ setCurrentPage, onQuoteClick, setSelectedServ
 
 
       {/* SECTION 10 — REVIEWS */}
-      <section id="reviews-section" className="bg-stone-50 py-20 lg:py-24 border-b border-stone-200/50">
+      <section id="reviews" className="bg-stone-50 py-20 lg:py-24 border-b border-stone-200/50 scroll-mt-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-xl mx-auto mb-12">
             <span className="text-[11px] font-mono uppercase tracking-widest font-bold text-emerald-800 flex items-center justify-center gap-1.5">

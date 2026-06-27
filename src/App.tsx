@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Phone, MessageSquare, ShieldCheck, ArrowUp } from 'lucide-react';
 import { Page } from './types';
 import Navbar from './components/Navbar';
@@ -16,10 +16,119 @@ import AboutView from './components/AboutView';
 import ContactView from './components/ContactView';
 import QuoteView from './components/QuoteView';
 
+const PAGE_PATHS: Record<Page, string> = {
+  home: '/',
+  services: '/services',
+  'additional-services': '/additional-services',
+  quote: '/quote',
+  gallery: '/gallery',
+  reviews: '/#reviews',
+  about: '/about',
+  contact: '/contact',
+};
+
+const PATH_PAGES: Record<string, Page> = {
+  '/': 'home',
+  '/services': 'services',
+  '/additional-services': 'additional-services',
+  '/quote': 'quote',
+  '/gallery': 'gallery',
+  '/about': 'about',
+  '/contact': 'contact',
+};
+
+const readLocation = () => {
+  const pathname = window.location.pathname.replace(/\/$/, '') || '/';
+  const page = PATH_PAGES[pathname] ?? 'home';
+  const params = new URLSearchParams(window.location.search);
+
+  return {
+    page,
+    selectedServiceId:
+      page === 'services' || page === 'additional-services'
+        ? params.get('service')
+        : null,
+    quoteItems: page === 'quote' ? params.get('items') ?? '' : '',
+  };
+};
+
+const scrollToLocationHash = (behavior: ScrollBehavior = 'auto') => {
+  const sectionId = decodeURIComponent(window.location.hash.slice(1));
+  if (!sectionId) return;
+
+  // Wait for the home view to mount when arriving from another page or a direct URL.
+  window.setTimeout(() => {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior, block: 'start' });
+  }, 100);
+};
+
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
-  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
-  const [preselectedQuoteService, setPreselectedQuoteService] = useState<string>('');
+  const initialLocation = useRef(readLocation()).current;
+  const [currentPage, setCurrentPageState] = useState<Page>(initialLocation.page);
+  const [selectedServiceId, setSelectedServiceIdState] = useState<string | null>(initialLocation.selectedServiceId);
+  const selectedServiceIdRef = useRef<string | null>(initialLocation.selectedServiceId);
+  const [preselectedQuoteService, setPreselectedQuoteService] = useState<string>(initialLocation.quoteItems);
+
+  const setSelectedServiceId = (id: string | null) => {
+    selectedServiceIdRef.current = id;
+    setSelectedServiceIdState(id);
+  };
+
+  const navigateToPage = (requestedPage: Page, quoteItems = '') => {
+    // Reviews are a section on the home page rather than a standalone view.
+    const isReviewsSection = requestedPage === 'reviews';
+    const page: Page = isReviewsSection ? 'home' : requestedPage;
+    const params = new URLSearchParams();
+
+    if ((page === 'services' || page === 'additional-services') && selectedServiceIdRef.current) {
+      params.set('service', selectedServiceIdRef.current);
+    }
+    if (page === 'quote' && quoteItems) {
+      params.set('items', quoteItems);
+    }
+
+    const query = params.toString();
+    const nextUrl = isReviewsSection
+      ? PAGE_PATHS.reviews
+      : `${PAGE_PATHS[page]}${query ? `?${query}` : ''}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+
+    if (currentUrl !== nextUrl) {
+      window.history.pushState({}, '', nextUrl);
+    }
+    setCurrentPageState(page);
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const location = readLocation();
+      selectedServiceIdRef.current = location.selectedServiceId;
+      setSelectedServiceIdState(location.selectedServiceId);
+      setPreselectedQuoteService(location.quoteItems);
+      setCurrentPageState(location.page);
+      if (location.page === 'home') {
+        scrollToLocationHash();
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    scrollToLocationHash();
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  useEffect(() => {
+    const titles: Record<Page, string> = {
+      home: 'Flatpack Doctors | Furniture Assembly Victoria',
+      services: 'Furniture Assembly Services | Flatpack Doctors',
+      'additional-services': 'Additional Services | Flatpack Doctors',
+      quote: 'Get a Quote | Flatpack Doctors',
+      gallery: 'Recent Work | Flatpack Doctors',
+      reviews: 'Customer Reviews | Flatpack Doctors',
+      about: 'About Us | Flatpack Doctors',
+      contact: 'Contact Us | Flatpack Doctors',
+    };
+    document.title = titles[currentPage];
+  }, [currentPage]);
 
   const handleQuoteClick = (serviceName?: string) => {
     if (serviceName && typeof serviceName === 'string') {
@@ -27,7 +136,7 @@ export default function App() {
     } else {
       setPreselectedQuoteService('');
     }
-    setCurrentPage('quote');
+    navigateToPage('quote', serviceName || '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -37,7 +146,7 @@ export default function App() {
       case 'home':
         return (
           <HomeView
-            setCurrentPage={setCurrentPage}
+            setCurrentPage={navigateToPage}
             onQuoteClick={handleQuoteClick}
             setSelectedServiceId={setSelectedServiceId}
           />
@@ -54,7 +163,7 @@ export default function App() {
         return (
           <AdditionalServicesView
             onQuoteClick={handleQuoteClick}
-            setCurrentPage={setCurrentPage}
+            setCurrentPage={navigateToPage}
             selectedServiceId={selectedServiceId}
             setSelectedServiceId={setSelectedServiceId}
           />
@@ -66,7 +175,7 @@ export default function App() {
         return (
           <AboutView
             onQuoteClick={handleQuoteClick}
-            setCurrentPage={setCurrentPage}
+            setCurrentPage={navigateToPage}
           />
         );
       case 'contact':
@@ -76,7 +185,7 @@ export default function App() {
       default:
         return (
           <HomeView
-            setCurrentPage={setCurrentPage}
+            setCurrentPage={navigateToPage}
             onQuoteClick={handleQuoteClick}
             setSelectedServiceId={setSelectedServiceId}
           />
@@ -90,8 +199,9 @@ export default function App() {
       {/* Sticky Translucent Navbar */}
       <Navbar
         currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
+        setCurrentPage={navigateToPage}
         onQuoteClick={handleQuoteClick}
+        selectedServiceId={selectedServiceId}
         setSelectedServiceId={setSelectedServiceId}
       />
 
@@ -102,7 +212,7 @@ export default function App() {
 
       {/* Global Footer */}
       <Footer
-        setCurrentPage={setCurrentPage}
+        setCurrentPage={navigateToPage}
         onQuoteClick={handleQuoteClick}
       />
 

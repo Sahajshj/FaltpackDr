@@ -19,14 +19,21 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-@media (max-w: 767px) {
-  #scrollytelling-section,
+@media (max-width: 767px) {
+  /* iOS zooms focused form controls whose computed text size is below 16px. */
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  #quality-standards,
   #more-than-assembly-section,
   #additional-services-section,
-  #how-it-works-section,
-  #after-sales-section,
+  #five-step-process,
+  #integrated-support,
   #gallery-preview-section,
-  #reviews-section,
+  #reviews,
   #final-cta-section {
     padding-bottom: calc(110px + env(safe-area-inset-bottom)) !important;
   }

@@ -14,6 +14,8 @@ interface ServicesViewProps {
 
 export default function ServicesView({ onQuoteClick, selectedServiceId, setSelectedServiceId }: ServicesViewProps) {
   const serviceRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const mobileServiceRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const isInitialRender = useRef(true);
   const [activeHighlightId, setActiveHighlightId] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -24,24 +26,43 @@ export default function ServicesView({ onQuoteClick, selectedServiceId, setSelec
   // Fallback to all services if ID matches something else or is invalid
   const finalServices = displayedServices.length > 0 ? displayedServices : SERVICES_DATA;
 
+  const handleShowAllServices = () => {
+    setSelectedServiceId(null);
+    setOpenId(null);
+    setActiveHighlightId(null);
+    window.history.replaceState({}, '', '/services');
+  };
+
   useEffect(() => {
-    if (selectedServiceId && serviceRefs.current[selectedServiceId]) {
+    const shouldScrollToSelection = isInitialRender.current;
+    isInitialRender.current = false;
+
+    if (selectedServiceId) {
       const targetId = selectedServiceId;
       setActiveHighlightId(targetId);
+      setOpenId(targetId);
       
-      const scrollTimer = setTimeout(() => {
-        serviceRefs.current[targetId]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 350);
+      if (shouldScrollToSelection) {
+        setTimeout(() => {
+          const isMobile = window.matchMedia('(max-width: 767px)').matches;
+          const target = isMobile
+            ? mobileServiceRefs.current[targetId]
+            : serviceRefs.current[targetId];
+          target?.scrollIntoView({ behavior: 'smooth', block: isMobile ? 'start' : 'center' });
+        }, 350);
+      }
 
       const highlightTimer = setTimeout(() => {
         setActiveHighlightId(null);
       }, 4000);
 
       return () => {
-        clearTimeout(scrollTimer);
         clearTimeout(highlightTimer);
       };
     }
+
+    setOpenId(null);
+    setActiveHighlightId(null);
   }, [selectedServiceId]);
 
   // Map icon names to Lucide elements
@@ -95,7 +116,7 @@ export default function ServicesView({ onQuoteClick, selectedServiceId, setSelec
               </p>
             </div>
             <button
-              onClick={() => setSelectedServiceId(null)}
+              onClick={handleShowAllServices}
               className="text-xs font-bold text-emerald-850 hover:text-emerald-950 underline decoration-emerald-800/40 hover:decoration-emerald-950 decoration-2 underline-offset-4 shrink-0 transition-all"
             >
               Show All General Services
@@ -112,6 +133,7 @@ export default function ServicesView({ onQuoteClick, selectedServiceId, setSelec
           return (
             <div
               key={service.id}
+              id={`general-service-${service.id}`}
               ref={(el) => { serviceRefs.current[service.id] = el; }}
               className={`bg-white rounded-2xl border p-6 md:p-10 transition-all duration-500 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center scroll-mt-28 relative ${
                 isHighlighted 
@@ -200,11 +222,13 @@ export default function ServicesView({ onQuoteClick, selectedServiceId, setSelec
       {/* Mobile-only Accordion Block */}
       <div className="md:hidden max-w-2xl mx-auto px-4 space-y-2 pb-4">
         {finalServices.map((service) => {
-          const isOpen = openId === service.id;
+          const isOpen = openId === service.id || selectedServiceId === service.id;
           return (
             <div
               key={service.id}
-              className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden ${
+              id={`mobile-general-service-${service.id}`}
+              ref={(el) => { mobileServiceRefs.current[service.id] = el; }}
+              className={`bg-white rounded-xl border transition-all duration-300 overflow-hidden scroll-mt-28 ${
                 isOpen ? 'border-emerald-600 shadow-md' : 'border-stone-200'
               }`}
             >
