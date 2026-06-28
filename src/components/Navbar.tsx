@@ -269,12 +269,13 @@ export default function Navbar({
                     key={link.page}
                     ref={homeTriggerRef}
                     onClick={toggleHomeMenu}
-                    className={`text-xs font-medium px-3 py-1.5 rounded transition-all duration-200 inline-flex items-center gap-1 ${
+                    className={`text-xs font-medium px-3 py-1.5 rounded transition-all duration-200 inline-flex items-center gap-1.5 ${
                       currentPage === 'home' || isHomeMenuOpen
-                        ? 'bg-emerald-50 text-emerald-950 font-semibold'
+                        ? 'text-emerald-950 font-semibold'
                         : 'text-stone-600 hover:text-stone-950 hover:bg-stone-50'
                     }`}
                   >
+                    {currentPage === 'home' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-900 shrink-0" />}
                     {link.label}
                     <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${isHomeMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -287,12 +288,13 @@ export default function Navbar({
                     key={link.page}
                     ref={triggerRef}
                     onClick={toggleServicesMenu}
-                    className={`text-xs font-medium px-3 py-1.5 rounded transition-all duration-200 inline-flex items-center gap-1 ${
+                    className={`text-xs font-medium px-3 py-1.5 rounded transition-all duration-200 inline-flex items-center gap-1.5 ${
                       currentPage === 'services' || currentPage === 'additional-services' || isServicesMenuOpen
-                        ? 'bg-emerald-50 text-emerald-950 font-semibold'
+                        ? 'text-emerald-950 font-semibold'
                         : 'text-stone-600 hover:text-stone-950 hover:bg-stone-50'
                     }`}
                   >
+                    {(currentPage === 'services' || currentPage === 'additional-services') && <span className="w-1.5 h-1.5 rounded-full bg-emerald-900 shrink-0" />}
                     {link.label}
                     <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${isServicesMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -303,12 +305,13 @@ export default function Navbar({
                 <button
                   key={link.page}
                   onClick={() => handleNavClick(link.page)}
-                  className={`text-xs font-medium px-3 py-1.5 rounded transition-all duration-200 ${
+                  className={`text-xs font-medium px-3 py-1.5 rounded transition-all duration-200 inline-flex items-center gap-1.5 ${
                     currentPage === link.page
-                      ? 'bg-emerald-50 text-emerald-950 font-semibold'
+                      ? 'text-emerald-950 font-semibold'
                       : 'text-stone-600 hover:text-stone-950 hover:bg-stone-50'
                   }`}
                 >
+                  {currentPage === link.page && <span className="w-1.5 h-1.5 rounded-full bg-emerald-900 shrink-0" />}
                   {link.label}
                 </button>
               );

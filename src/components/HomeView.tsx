@@ -117,180 +117,68 @@ export default function HomeView({ setCurrentPage, onQuoteClick, setSelectedServ
 
   return (
     <div className="pt-16">
+      <div className="xl:min-h-[calc(100svh-4rem)] xl:flex xl:flex-col">
       
       {/* SECTION 1 — HERO (CENTERED & MODERN) */}
-      <section id="hero-section" className="relative pt-10 pb-14 sm:pt-14 sm:pb-20 lg:pt-16 lg:pb-24 overflow-hidden border-b border-stone-200/50">
+      <section id="hero-section" className="relative isolate xl:flex-1 pt-10 pb-14 sm:pt-14 sm:pb-20 lg:pt-16 lg:pb-24 overflow-hidden border-b border-stone-200/50">
         
         {/* Base Warm Off-White Background */}
         <div className="absolute inset-0 bg-[#FAF9F6] -z-30 pointer-events-none" />
         
-        {/* Faint fine-line grid at 4-5% opacity (not affecting readability) */}
-        <div className="absolute inset-0 opacity-[0.045] pointer-events-none -z-10" 
-             style={{ 
-               backgroundImage: `
-                 linear-gradient(to right, rgba(28,25,23,0.08) 1px, transparent 1px),
-                 linear-gradient(to bottom, rgba(28,25,23,0.08) 1px, transparent 1px)
-               `,
-               backgroundSize: '36px 36px'
-             }} 
-        />
+        {/* Layered architectural grid: fine modules + wider drafting guides. */}
+        <div className="professional-grid absolute inset-0 pointer-events-none -z-10" aria-hidden="true" />
+
+        {/* Restrained furniture blueprints kept at the outer edges of the hero. */}
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 1440 760"
+          preserveAspectRatio="none"
+          className="absolute inset-0 hidden md:block w-full h-full pointer-events-none select-none -z-10 text-emerald-950 opacity-[0.13]"
+          fill="none"
+          stroke="currentColor"
+        >
+          {/* Left: cabinet elevation with shelf and door clearances. */}
+          <g transform="translate(8 -135)" strokeWidth="1.25" vectorEffect="non-scaling-stroke">
+            <rect x="42" y="176" width="186" height="316" rx="2" />
+            <rect x="58" y="192" width="154" height="284" />
+            <line x1="135" y1="192" x2="135" y2="476" />
+            <line x1="58" y1="286" x2="212" y2="286" />
+            <line x1="58" y1="382" x2="212" y2="382" />
+            <circle cx="121" cy="334" r="3" />
+            <circle cx="149" cy="334" r="3" />
+            <path d="M42 512v22M228 512v22M42 528h186" strokeDasharray="5 5" />
+            <path d="M22 176H8M22 492H8M14 176v316" strokeDasharray="5 5" />
+            <path d="M35 168h14M42 161v14M221 168h14M228 161v14" />
+          </g>
+          <g transform="translate(8 -135)" fill="currentColor" stroke="none" className="font-mono text-[10px] tracking-widest">
+            <text x="106" y="550">1200 mm</text>
+            <text x="4" y="350" transform="rotate(-90 4 350)">2100 mm</text>
+            <text x="60" y="212">ELEVATION A</text>
+          </g>
+
+          {/* Right: exploded modular shelf assembly and alignment axis. */}
+          <g transform="translate(18 170)" strokeWidth="1.25" vectorEffect="non-scaling-stroke">
+            <path d="M1210 220l112-36 76 46-112 37z" />
+            <path d="M1210 258l112-36 76 46-112 37z" strokeDasharray="6 5" />
+            <path d="M1224 282v168l62 36V305M1384 287v163l-98 36" />
+            <path d="M1245 339l77-25 42 25-78 26zM1245 405l77-25 42 25-78 26z" />
+            <path d="M1175 205h210M1280 160v350" strokeDasharray="3 7" />
+            <circle cx="1280" cy="205" r="6" />
+            <path d="M1268 205h24M1280 193v24" />
+            <path d="M1200 475h198M1200 468v14M1398 468v14" strokeDasharray="5 5" />
+          </g>
+          <g transform="translate(18 170)" fill="currentColor" stroke="none" className="font-mono text-[10px] tracking-widest">
+            <text x="1238" y="150">AXIS 02</text>
+            <text x="1262" y="500">900 mm</text>
+            <text x="1288" y="330">MODULE B</text>
+          </g>
+        </svg>
         
         {/* Soft, heavily blurred gradient corner glows */}
         {/* Top-left: mint/soft green glow and pale green */}
         <div className="absolute top-0 left-0 w-[70%] h-[70%] bg-[radial-gradient(ellipse_at_top_left,#DDF6E8_0%,#BFE8D1_35%,transparent_70%)] opacity-35 pointer-events-none -z-20 blur-[130px]" />
         {/* Bottom-right: warm sand glow and light beige */}
         <div className="absolute bottom-0 right-0 w-[75%] h-[75%] bg-[radial-gradient(ellipse_at_bottom_right,#F3E6CF_0%,#F7F1E8_40%,transparent_70%)] opacity-55 pointer-events-none -z-20 blur-[140px]" />
-
-        {/* DECORATIVE TECHNICAL ASSEMBLY VISUALS (SVG ILLUSTRATIONS) */}
-        
-        {/* 1. Top-Left: Drawer slides technical blueprint drawing (Hidden on mobile) */}
-        <div className="absolute left-4 lg:left-10 top-12 w-40 lg:w-56 h-auto opacity-75 hidden md:block select-none pointer-events-none -z-10">
-          <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto text-stone-400 stroke-current">
-            {/* Outer track */}
-            <path d="M10 20 L130 50 L130 65 L10 35 Z" strokeWidth="1" strokeLinejoin="round" />
-            <path d="M10 35 L130 65 L130 68 L10 38 Z" strokeWidth="0.75" />
-            {/* Inner slide track */}
-            <path d="M30 30 L150 60 L150 70 L30 40 Z" strokeWidth="1" strokeLinejoin="round" strokeDasharray="3 2" />
-            {/* Screw holes */}
-            <circle cx="25" cy="27" r="2.5" strokeWidth="1" />
-            <circle cx="65" cy="37" r="2.5" strokeWidth="1" />
-            <circle cx="105" cy="47" r="2.5" strokeWidth="1" />
-            {/* Measurement / drafting lines */}
-            <line x1="10" y1="15" x2="130" y2="45" strokeWidth="0.5" strokeDasharray="4 4" />
-            <line x1="10" y1="12" x2="10" y2="18" strokeWidth="0.75" />
-            <line x1="130" y1="42" x2="130" y2="48" strokeWidth="0.75" />
-            <text x="55" y="24" className="fill-stone-400 font-mono text-[7px]" transform="rotate(13, 55, 24)">500mm</text>
-            <path d="M120 53 C120 51, 125 50, 128 52 C130 53, 131 56, 129 58 C127 59, 122 58, 120 53 Z" strokeWidth="0.75" />
-          </svg>
-        </div>
-
-        {/* 2. Top-Right: Spirit level (Floating, angled) */}
-        {/* On mobile: simplified, smaller, tucked into the top-right corner */}
-        <div className="absolute right-[-25px] sm:right-[-10px] md:right-[-20px] lg:right-[-40px] top-6 sm:top-10 md:top-14 w-28 sm:w-36 md:w-48 lg:w-64 h-auto opacity-[0.85] select-none pointer-events-none -z-10 -rotate-12 transform origin-top-right">
-          <svg viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto filter drop-shadow-[0_4px_12px_rgba(28,25,23,0.06)]">
-            <defs>
-              <linearGradient id="vial-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#86EFAC" />
-                <stop offset="50%" stopColor="#22C55E" />
-                <stop offset="100%" stopColor="#15803D" />
-              </linearGradient>
-              <linearGradient id="metal-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#374151" />
-                <stop offset="30%" stopColor="#4B5563" />
-                <stop offset="70%" stopColor="#1F2937" />
-                <stop offset="100%" stopColor="#111827" />
-              </linearGradient>
-            </defs>
-            {/* Level Body */}
-            <rect x="5" y="8" width="190" height="34" rx="3" fill="url(#metal-grad)" stroke="#111827" strokeWidth="1.5" />
-            <rect x="7" y="10" width="186" height="30" rx="1.5" fill="none" stroke="#6B7280" strokeWidth="0.75" />
-            {/* Metal hand grip cutout */}
-            <rect x="25" y="16" width="30" height="18" rx="9" fill="#111827" stroke="#4B5563" strokeWidth="0.75" />
-            {/* Center Liquid vial */}
-            <rect x="80" y="15" width="40" height="20" rx="2" fill="#111827" stroke="#4B5563" strokeWidth="1" />
-            <rect x="85" y="19" width="30" height="12" rx="1" fill="url(#vial-grad)" />
-            {/* Liquid vial markings */}
-            <line x1="95" y1="19" x2="95" y2="31" stroke="#111827" strokeWidth="1" />
-            <line x1="105" y1="19" x2="105" y2="31" stroke="#111827" strokeWidth="1" />
-            {/* Level bubble */}
-            <ellipse cx="100" cy="25" rx="3.5" ry="2.5" fill="#FFFFFF" fillOpacity="0.85" />
-            
-            {/* Right Liquid vial (45 degree) */}
-            <g transform="translate(145, 15)">
-              <rect x="0" y="0" width="22" height="20" rx="2" fill="#111827" stroke="#4B5563" strokeWidth="0.75" />
-              <circle cx="11" cy="10" r="7" fill="url(#vial-grad)" />
-              <line x1="6" y1="6" x2="16" y2="14" stroke="#111827" strokeWidth="1" />
-              <circle cx="11" cy="10" r="2" fill="#FFFFFF" fillOpacity="0.85" />
-            </g>
-
-            {/* Left Liquid vial (Vertical) */}
-            <g transform="translate(62, 16)">
-              <rect x="0" y="0" width="12" height="18" rx="1" fill="url(#vial-grad)" />
-              <ellipse cx="6" cy="9" rx="2" ry="1.5" fill="#FFFFFF" fillOpacity="0.85" />
-              <line x1="0" y1="9" x2="12" y2="9" stroke="#111827" strokeWidth="0.75" />
-            </g>
-            
-            {/* Ruler markings */}
-            <line x1="10" y1="42" x2="190" y2="42" stroke="#4B5563" strokeWidth="1" />
-            <line x1="20" y1="38" x2="20" y2="42" stroke="#4B5563" strokeWidth="1" />
-            <line x1="40" y1="39" x2="40" y2="42" stroke="#4B5563" strokeWidth="1" />
-            <line x1="60" y1="38" x2="60" y2="42" stroke="#4B5563" strokeWidth="1" />
-            <line x1="80" y1="39" x2="80" y2="42" stroke="#4B5563" strokeWidth="1" />
-            <line x1="100" y1="38" x2="100" y2="42" stroke="#4B5563" strokeWidth="1" />
-            <line x1="120" y1="39" x2="120" y2="42" stroke="#4B5563" strokeWidth="1" />
-            <line x1="140" y1="38" x2="140" y2="42" stroke="#4B5563" strokeWidth="1" />
-            <line x1="160" y1="39" x2="160" y2="42" stroke="#4B5563" strokeWidth="1" />
-            <line x1="180" y1="38" x2="180" y2="42" stroke="#4B5563" strokeWidth="1" />
-          </svg>
-        </div>
-
-        {/* 3. Bottom-Left: Screwdriver (Angled, green/black grip) */}
-        {/* On mobile: simplified, smaller, sitting cleanly at the bottom-left edge */}
-        <div className="absolute left-[-20px] sm:left-[-10px] md:left-2 lg:left-8 bottom-4 sm:bottom-6 md:bottom-10 w-24 sm:w-36 md:w-48 lg:w-64 h-auto opacity-[0.88] select-none pointer-events-none -z-10 rotate-[22deg] md:rotate-12 transform origin-bottom-left">
-          <svg viewBox="0 0 180 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto filter drop-shadow-[2px_6px_12px_rgba(28,25,23,0.08)]">
-            <defs>
-              <linearGradient id="handle-grad-black" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#1C1917" />
-                <stop offset="50%" stopColor="#292524" />
-                <stop offset="100%" stopColor="#0C0A09" />
-              </linearGradient>
-              <linearGradient id="handle-grad-green" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#059669" />
-                <stop offset="50%" stopColor="#047857" />
-                <stop offset="100%" stopColor="#065F46" />
-              </linearGradient>
-              <linearGradient id="metal-shaft-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#F1F5F9" />
-                <stop offset="40%" stopColor="#CBD5E1" />
-                <stop offset="75%" stopColor="#64748B" />
-                <stop offset="100%" stopColor="#475569" />
-              </linearGradient>
-            </defs>
-            {/* Metal Shaft */}
-            <rect x="75" y="27" width="80" height="6" rx="1" fill="url(#metal-shaft-grad)" />
-            {/* Screwdriver Tip */}
-            <path d="M155 26 L168 28 L168 32 L155 34 Z" fill="#475569" />
-            <rect x="168" y="28.5" width="4" height="3" fill="#0F172A" />
-            
-            {/* Screwdriver Handle */}
-            <g transform="translate(10, 10)">
-              <path d="M0 20 C0 8, 15 6, 25 8 C35 10, 45 6, 60 10 C65 11, 68 15, 68 20 C68 25, 65 29, 60 30 C45 34, 35 30, 25 32 C15 34, 0 32, 0 20 Z" fill="url(#handle-grad-black)" stroke="#0C0A09" strokeWidth="0.75" />
-              {/* Green rubber panels */}
-              <path d="M12 11 C15 11, 20 12, 22 20 C24 28, 15 29, 12 29 Z" fill="url(#handle-grad-green)" />
-              <path d="M26 10 C30 10, 34 11, 35 20 C36 29, 30 30, 26 30 Z" fill="url(#handle-grad-green)" />
-              <path d="M40 11 C43 11, 46 12, 47 20 C48 28, 43 29, 40 29 Z" fill="url(#handle-grad-green)" />
-              {/* End cap */}
-              <path d="M0 20 C0 14, 4 14, 5 20 C4 26, 0 26, 0 20 Z" fill="#1C1917" />
-              {/* Collar */}
-              <rect x="65" y="16" width="3" height="8" rx="1" fill="#475569" />
-            </g>
-          </svg>
-        </div>
-
-        {/* 4. Bottom-Right: Line-art outline of table frame (Hidden on mobile) */}
-        <div className="absolute right-4 lg:right-12 bottom-6 lg:bottom-12 w-44 lg:w-64 h-auto opacity-70 hidden md:block select-none pointer-events-none -z-10">
-          <svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto text-stone-400 stroke-current">
-            {/* Table Top */}
-            <path d="M10 40 L110 30 L150 70 L50 80 Z" strokeWidth="1.25" strokeLinejoin="round" />
-            {/* Underframe */}
-            <path d="M22 47 L108 38 L108 48 L22 57 Z" strokeWidth="1" />
-            <path d="M108 38 L142 72 L142 80" strokeWidth="1" />
-            {/* Table Legs */}
-            <path d="M22 48 L22 130 L28 130 L28 48" strokeWidth="1" strokeLinejoin="round" />
-            <path d="M142 72 L142 120 L136 120 L136 72" strokeWidth="1" strokeLinejoin="round" />
-            <path d="M108 38 L108 100 L112 100 L112 38" strokeWidth="0.75" strokeDasharray="3 2" />
-            <path d="M50 80 L50 135 L56 135 L56 80" strokeWidth="1.25" strokeLinejoin="round" />
-            {/* Technical annotations */}
-            <line x1="50" y1="138" x2="142" y2="123" strokeWidth="0.5" strokeDasharray="3 3" />
-            <line x1="50" y1="135" x2="50" y2="141" strokeWidth="0.5" />
-            <line x1="142" y1="120" x2="142" y2="126" strokeWidth="0.5" />
-            <text x="96" y="139" className="fill-stone-400 font-mono text-[6.5px]" transform="rotate(-6, 96, 139)">1200mm</text>
-            <line x1="15" y1="40" x2="15" y2="130" strokeWidth="0.5" strokeDasharray="3 3" />
-            <line x1="12" y1="40" x2="18" y2="40" strokeWidth="0.5" />
-            <line x1="12" y1="130" x2="18" y2="130" strokeWidth="0.5" />
-            <text x="-90" y="10" className="fill-stone-400 font-mono text-[6.5px]" transform="rotate(-90)">750mm</text>
-          </svg>
-        </div>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           
@@ -426,7 +314,7 @@ export default function HomeView({ setCurrentPage, onQuoteClick, setSelectedServ
           </p>
 
           {/* 5. TRUST POINTS (MOVED UPWARD FOR MOBILE ONLY) */}
-          <div className="max-w-4xl mx-auto mt-8 mb-8 md:hidden">
+          <div id="mobile-trust-cards" className="max-w-4xl mx-auto mt-8 mb-8 md:hidden">
             <div className="grid grid-cols-2 gap-3 text-center px-2 sm:px-4">
               <div className="bg-white/70 backdrop-blur-md border border-stone-200/50 rounded-xl p-3.5 flex flex-col items-center justify-center transition-all duration-300 hover:bg-white hover:shadow-md hover:border-emerald-800/20">
                 <ShieldCheck className="w-5.5 h-5.5 text-emerald-800 mb-2 shrink-0" />
@@ -519,6 +407,7 @@ export default function HomeView({ setCurrentPage, onQuoteClick, setSelectedServ
           </div>
         </div>
       </section>
+      </div>
 
       {/* Detailed overlay modal for selected Additional Service */}
       {selectedAdditionalService && (
