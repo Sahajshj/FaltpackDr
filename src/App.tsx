@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Phone, MessageSquare, ShieldCheck, ArrowUp } from 'lucide-react';
+import { MessageSquare, ShieldCheck, ChevronDown, ChevronUp } from 'lucide-react';
 import { Page } from './types';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -68,6 +68,8 @@ export default function App() {
   const [selectedServiceId, setSelectedServiceIdState] = useState<string | null>(initialLocation.selectedServiceId);
   const selectedServiceIdRef = useRef<string | null>(initialLocation.selectedServiceId);
   const [preselectedQuoteService, setPreselectedQuoteService] = useState<string>(initialLocation.quoteItems);
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
 
   const setSelectedServiceId = (id: string | null) => {
     selectedServiceIdRef.current = id;
@@ -129,6 +131,41 @@ export default function App() {
     };
     document.title = titles[currentPage];
   }, [currentPage]);
+
+  useEffect(() => {
+    const updateScrollControl = () => {
+      const remainingDistance = document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
+      setCanScrollUp(window.scrollY > 12);
+      setCanScrollDown(remainingDistance > 12);
+    };
+
+    const frameId = window.requestAnimationFrame(updateScrollControl);
+    const deferredId = window.setTimeout(updateScrollControl, 150);
+    const resizeObserver = new ResizeObserver(updateScrollControl);
+    resizeObserver.observe(document.body);
+
+    window.addEventListener('scroll', updateScrollControl, { passive: true });
+    window.addEventListener('resize', updateScrollControl);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.clearTimeout(deferredId);
+      resizeObserver.disconnect();
+      window.removeEventListener('scroll', updateScrollControl);
+      window.removeEventListener('resize', updateScrollControl);
+    };
+  }, [currentPage]);
+
+  const scrollPage = (direction: -1 | 1) => {
+    const navbarHeight = document.getElementById('main-navbar')?.getBoundingClientRect().height ?? 0;
+    const scrollDistance = Math.max(240, window.innerHeight - navbarHeight - 32);
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    window.scrollBy({
+      top: scrollDistance * direction,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+    });
+  };
 
   const handleQuoteClick = (serviceName?: string) => {
     if (serviceName && typeof serviceName === 'string') {
@@ -215,6 +252,30 @@ export default function App() {
         setCurrentPage={navigateToPage}
         onQuoteClick={handleQuoteClick}
       />
+
+      {/* GLOBAL BIDIRECTIONAL PAGE-SCROLL CONTROL */}
+      <div className="fixed left-2 md:left-3 top-1/2 -translate-y-1/2 z-30 flex flex-col overflow-hidden rounded-full border border-white/55 bg-[linear-gradient(to_bottom,rgba(209,250,229,0.06)_0%,rgba(167,243,208,0.13)_48%,rgba(110,231,183,0.30)_100%)] text-emerald-950 shadow-[5px_7px_20px_rgba(6,78,59,0.11),inset_0_1px_0_rgba(255,255,255,0.7),inset_0_-10px_18px_rgba(110,231,183,0.10)] ring-1 ring-inset ring-emerald-950/5 backdrop-blur-lg backdrop-saturate-150">
+        <button
+          type="button"
+          onClick={() => scrollPage(-1)}
+          disabled={!canScrollUp}
+          className="flex h-9 w-7 md:h-10 md:w-8 items-center justify-center border-b border-white/45 bg-transparent disabled:cursor-not-allowed disabled:text-stone-500/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600/60"
+          aria-label="Scroll up one section"
+          title={canScrollUp ? 'Continue up' : 'You are at the top'}
+        >
+          <ChevronUp className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={() => scrollPage(1)}
+          disabled={!canScrollDown}
+          className="flex h-9 w-7 md:h-10 md:w-8 items-center justify-center bg-transparent disabled:cursor-not-allowed disabled:text-stone-500/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600/60"
+          aria-label="Scroll down one section"
+          title={canScrollDown ? 'Continue down' : 'You are at the bottom'}
+        >
+          <ChevronDown className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
 
       {/* 1. FLOATING WHATSAPP CHAT BUBBLE */}
       <a
