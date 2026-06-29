@@ -254,7 +254,7 @@ export default function App() {
       />
 
       {/* GLOBAL BIDIRECTIONAL PAGE-SCROLL CONTROL */}
-      <div className="fixed left-2 md:left-3 top-1/2 -translate-y-1/2 z-30 flex flex-col overflow-hidden rounded-full border border-white/55 bg-[linear-gradient(to_bottom,rgba(209,250,229,0.06)_0%,rgba(167,243,208,0.13)_48%,rgba(110,231,183,0.30)_100%)] text-emerald-950 shadow-[5px_7px_20px_rgba(6,78,59,0.11),inset_0_1px_0_rgba(255,255,255,0.7),inset_0_-10px_18px_rgba(110,231,183,0.10)] ring-1 ring-inset ring-emerald-950/5 backdrop-blur-lg backdrop-saturate-150">
+      <div className="fixed left-2 md:left-3 top-1/2 -translate-y-1/2 z-30 hidden lg:flex flex-col overflow-hidden rounded-full border border-white/55 bg-[linear-gradient(to_bottom,rgba(209,250,229,0.06)_0%,rgba(167,243,208,0.13)_48%,rgba(110,231,183,0.30)_100%)] text-emerald-950 shadow-[5px_7px_20px_rgba(6,78,59,0.11),inset_0_1px_0_rgba(255,255,255,0.7),inset_0_-10px_18px_rgba(110,231,183,0.10)] ring-1 ring-inset ring-emerald-950/5 backdrop-blur-lg backdrop-saturate-150">
         <button
           type="button"
           onClick={() => scrollPage(-1)}
